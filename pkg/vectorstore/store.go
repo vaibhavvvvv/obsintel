@@ -1,0 +1,3 @@
+// VectorStore interface
+
+package vectorstore
