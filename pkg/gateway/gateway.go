@@ -5,9 +5,11 @@ package gateway
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaibhavvvvv/obsintel/config"
+	"github.com/vaibhavvvvv/obsintel/pkg/gateway/middleware"
 	"github.com/vaibhavvvvv/obsintel/pkg/gateway/providers"
 )
 
@@ -29,6 +31,9 @@ func New(ctx context.Context) *Gateway {
 		ctx:      ctx,
 	}
 
+	limiter := middleware.NewRateLimiter(3,time.Minute)
+
+	g.router.Use(limiter.Middleware())
 	g.registerRoutes()
 	return g
 
@@ -42,38 +47,3 @@ func (g *Gateway) Run(port string) {
 func (g *Gateway) registerRoutes() {
 	g.router.POST("/chat", g.handleChat)
 }
-
-// func Init(){
-// 	ctx := context.Background()
-
-// 	// Create a new Chat.
-// 	chat, err := client.Chats.Create(ctx, "gemini-3.5-flash-lite", nil, nil)
-// 	if err != nil {
-// 		fmt.Printf("Failed to create chat: %v", err)
-// 	}
-
-// 	router.POST("/chat", func(c *gin.Context) {
-// 		var req struct {
-// 			Message string `json:"message"`
-// 		}
-// 		if err := c.ShouldBindJSON(&req); err != nil {
-// 			c.JSON(400, gin.H{"error": "invalid request"})
-// 			return
-// 		}
-// 		if req.Message == "" {
-// 			c.JSON(400, gin.H{"error": "message is required"})
-// 			return
-// 		}
-// 		response, err := providers.ChatWithGemini(ctx, chat, req.Message)
-// 		if err != nil {
-// 			c.JSON(500, gin.H{
-// 				"error": err.Error(),
-// 			})
-// 			return
-// 		}
-// 		c.JSON(200, gin.H{
-// 			"response": response,
-// 		})
-// 	})
-
-// }
