@@ -11,6 +11,7 @@ import (
 type Config struct {
     GeminiAPIKey string
     Port         string
+	VALID_API_KEYS string
 }
 
 var C Config
@@ -24,6 +25,7 @@ func Init(){
 	C = Config{
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
         Port:         getEnv("PORT", "8080"),
+		VALID_API_KEYS: os.Getenv("VALID_API_KEYS"),
 	}
 }
 
