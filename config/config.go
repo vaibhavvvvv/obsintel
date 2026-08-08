@@ -12,6 +12,11 @@ type Config struct {
     GeminiAPIKey string
     Port         string
 	VALID_API_KEYS string
+	DBUser        string
+    DBPassword    string
+    DBHost        string
+    DBPort        string
+    DBName        string
 }
 
 var C Config
@@ -26,6 +31,11 @@ func Init(){
 		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
         Port:         getEnv("PORT", "8080"),
 		VALID_API_KEYS: os.Getenv("VALID_API_KEYS"),
+		DBUser:       os.Getenv("DB_USER"),
+		DBPassword:   os.Getenv("DB_PASSWORD"),
+		DBHost:       getEnv("DB_HOST", "localhost"),
+		DBPort:       getEnv("DB_PORT", "5432"),
+		DBName:       os.Getenv("DB_NAME"),
 	}
 }
 
