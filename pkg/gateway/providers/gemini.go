@@ -12,6 +12,12 @@ type GeminiProvider struct {
 	chat   *genai.Chat
 }
 
+type ChatResult struct {
+	Text           string
+	PromptTokens   int
+	ResponseTokens int
+}
+
 func NewGeminiProvider(ctx context.Context, apiKey string) (*GeminiProvider, error) {
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
 		APIKey:  apiKey,
@@ -27,10 +33,15 @@ func NewGeminiProvider(ctx context.Context, apiKey string) (*GeminiProvider, err
 	return &GeminiProvider{client: client, chat: chat}, nil
 }
 
-func (g *GeminiProvider) Chat(ctx context.Context, message string) (string, error) {
+func (g *GeminiProvider) Chat(ctx context.Context, message string) (ChatResult, error) {
+    var chatresponse ChatResult
 	result, err := g.chat.SendMessage(ctx, genai.Part{Text: message})
 	if err != nil {
-		return "", err
+		return chatresponse, err
 	}
-	return result.Text(), nil
+
+    chatresponse.PromptTokens = int(result.UsageMetadata.PromptTokenCount)
+    chatresponse.ResponseTokens = int(result.UsageMetadata.CandidatesTokenCount)
+    chatresponse.Text = result.Text()
+	return chatresponse, nil
 }

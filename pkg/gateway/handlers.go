@@ -37,6 +37,8 @@ func (g *Gateway) handleChat(c *gin.Context) {
 			APIKey:    apiKey.(string), // type asserting as string cuz c.Get("api_key") returns an any
 			Model:     config.C.AI_MODEL,
 			LatencyMs: latencyMs,
+			PromptTokens: response.PromptTokens,
+			ResponseTokens: response.ResponseTokens,
 			Success:   err == nil,
 		}); logErr != nil {
 			log.Printf("Failed to log request: %v", logErr)
@@ -47,5 +49,5 @@ func (g *Gateway) handleChat(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, gin.H{"response": response})
+	c.JSON(200, gin.H{"response": response.Text})
 }
