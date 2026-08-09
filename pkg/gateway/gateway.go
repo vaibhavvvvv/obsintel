@@ -21,7 +21,7 @@ type Gateway struct {
 }
 
 func New(ctx context.Context) *Gateway {
-	provider, err := providers.NewGeminiProvider(ctx, config.C.GeminiAPIKey)
+	provider, err := providers.NewGeminiProvider(ctx, config.C.GEMINI_API_KEY)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}

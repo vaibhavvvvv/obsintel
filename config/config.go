@@ -9,7 +9,8 @@ import (
 
 //adding all the config params used throughout the codebase here
 type Config struct {
-    GeminiAPIKey string
+    GEMINI_API_KEY string
+	AI_MODEL		string
     Port         string
 	VALID_API_KEYS string
 	DBUser        string
@@ -28,7 +29,8 @@ func Init(){
 	}
 
 	C = Config{
-		GeminiAPIKey: os.Getenv("GEMINI_API_KEY"),
+		GEMINI_API_KEY: os.Getenv("GEMINI_API_KEY"),
+		AI_MODEL		: os.Getenv("AI_MODEL"),
         Port:         getEnv("PORT", "8080"),
 		VALID_API_KEYS: os.Getenv("VALID_API_KEYS"),
 		DBUser:       os.Getenv("DB_USER"),

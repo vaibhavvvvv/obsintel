@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/vaibhavvvvv/obsintel/config"
 	"github.com/vaibhavvvvv/obsintel/store/queries"
 )
 
@@ -34,7 +35,7 @@ func (g *Gateway) handleChat(c *gin.Context) {
 		defer cancel()
 		if logErr := queries.LogRequest(logCtx, queries.RequestLog{
 			APIKey:    apiKey.(string), // type asserting as string cuz c.Get("api_key") returns an any
-			Model:     "gemini-3.6-flash",
+			Model:     config.C.AI_MODEL,
 			LatencyMs: latencyMs,
 			Success:   err == nil,
 		}); logErr != nil {
