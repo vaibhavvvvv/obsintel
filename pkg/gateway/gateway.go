@@ -5,8 +5,8 @@ package gateway
 import (
 	"context"
 	"log"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaibhavvvvv/obsintel/config"
@@ -33,9 +33,9 @@ func New(ctx context.Context) *Gateway {
 	}
 
 	authApiKeys := middleware.NewAuthMiddleware(strings.Split(config.C.VALID_API_KEYS, ","))
-	limiter := middleware.NewRateLimiter(3,time.Minute)
+	limiter := middleware.NewRateLimiter(3, time.Minute)
 
-	g.router.Use(authApiKeys.Middleware())	
+	g.router.Use(authApiKeys.Middleware())
 	g.router.Use(limiter.Middleware())
 	g.registerRoutes()
 	return g
@@ -49,4 +49,5 @@ func (g *Gateway) Run(port string) {
 
 func (g *Gateway) registerRoutes() {
 	g.router.POST("/chat", g.handleChat)
+	g.router.POST("/chat/stream", g.handleChatStream)
 }
