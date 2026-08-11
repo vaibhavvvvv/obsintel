@@ -41,6 +41,8 @@ func (g *Gateway) handleChat(c *gin.Context) {
 			LatencyMs: latencyMs,
 			PromptTokens: response.PromptTokens,
 			ResponseTokens: response.ResponseTokens,
+			Cost: 	g.ct.Calculate(config.C.AI_MODEL,response.PromptTokens,response.ResponseTokens),
+			Error: func() string{ if err!=nil{ return err.Error()}; return ""}(),
 			Success:   err == nil,
 		}); logErr != nil {
 			log.Printf("Failed to log request: %v", logErr)
@@ -106,6 +108,8 @@ func (g *Gateway) handleChatStream(c *gin.Context) {
 			LatencyMs: latencyMs,
 			PromptTokens: response.PromptTokens,
 			ResponseTokens: response.ResponseTokens,
+			Cost: 	g.ct.Calculate(config.C.AI_MODEL,response.PromptTokens,response.ResponseTokens),
+			Error: func() string{ if err!=nil{ return err.Error()}; return ""}(),
 			Success: err == nil,
 		}); logErr != nil {
 			log.Printf("Failed to log request: %v", logErr)

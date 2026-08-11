@@ -18,6 +18,7 @@ type Gateway struct {
 	router   *gin.Engine
 	provider providers.Provider // interface, not concrete type -> Chat(ctx,message)
 	ctx      context.Context
+	ct       *CostTracker
 }
 
 func New(ctx context.Context) *Gateway {
@@ -26,10 +27,15 @@ func New(ctx context.Context) *Gateway {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 
+	costTracker := NewCostTracker()
+	costTracker.FetchAndCachePricing(ctx)
+	costTracker.StartAutoRefresh(ctx, 6*time.Hour)
+
 	g := &Gateway{
 		router:   gin.Default(),
 		provider: provider,
 		ctx:      ctx,
+		ct:       costTracker,
 	}
 
 	authApiKeys := middleware.NewAuthMiddleware(strings.Split(config.C.VALID_API_KEYS, ","))
