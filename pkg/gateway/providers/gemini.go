@@ -35,7 +35,13 @@ func NewGeminiProvider(ctx context.Context, apiKey string) (*GeminiProvider, err
 
 func (g *GeminiProvider) Chat(ctx context.Context, message string) (ChatResult, error) {
 	var chatresponse ChatResult
-	result, err := g.chat.SendMessage(ctx, genai.Part{Text: message})
+
+	chat, err := g.client.Chats.Create(ctx, config.C.AI_MODEL, nil, nil)
+	if err != nil {
+		return ChatResult{}, err
+	}
+	//	result, err := g.chat.SendMessage(ctx, genai.Part{Text: message})
+	result, err := chat.SendMessage(ctx, genai.Part{Text: message}) //new session/chat per request
 	if err != nil {
 		return chatresponse, err
 	}
@@ -48,7 +54,13 @@ func (g *GeminiProvider) Chat(ctx context.Context, message string) (ChatResult, 
 
 func (g *GeminiProvider) ChatStream(ctx context.Context, message string, onToken func(string)) (ChatResult, error) {
 	var chatresponse ChatResult
-	for stream, err := range g.chat.SendMessageStream(ctx, genai.Part{Text: message}) {
+
+	chat, err := g.client.Chats.Create(ctx, config.C.AI_MODEL, nil, nil)
+	if err != nil {
+		return ChatResult{}, err
+	}
+	//	for stream, err := range g.chat.SendMessageStream(ctx, genai.Part{Text: message}) {
+	for stream, err := range chat.SendMessageStream(ctx, genai.Part{Text: message}) { //new session/chat per request to use less tokens
 		if err != nil {
 			return chatresponse, err
 		}
