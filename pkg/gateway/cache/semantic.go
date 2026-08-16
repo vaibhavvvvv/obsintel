@@ -54,6 +54,7 @@ func (sc *SemanticCache) Get(ctx context.Context, apiKey, query string) (string,
 	AND 1 - (query_embedding <=> $1::float4[]::vector) > $3
 	ORDER BY query_embedding <=> $1::float4[]::vector
 	LIMIT 1;`, embedding, apiKey, sc.threshhold).Scan(&cachedResponse, &similarity, &rowId)
+	fmt.Println(query, ": ", similarity)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", 0.0, false, nil // cache miss

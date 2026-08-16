@@ -10,8 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaibhavvvvv/obsintel/config"
+	"github.com/vaibhavvvvv/obsintel/pkg/gateway/cache"
 	"github.com/vaibhavvvvv/obsintel/pkg/gateway/middleware"
 	"github.com/vaibhavvvvv/obsintel/pkg/gateway/providers"
+	"github.com/vaibhavvvvv/obsintel/store"
 )
 
 type Gateway struct {
@@ -19,6 +21,7 @@ type Gateway struct {
 	provider providers.Provider // interface, not concrete type -> Chat(ctx,message)
 	ctx      context.Context
 	ct       *CostTracker
+	cache	*cache.SemanticCache
 }
 
 func New(ctx context.Context) *Gateway {
@@ -31,11 +34,14 @@ func New(ctx context.Context) *Gateway {
 	costTracker.FetchAndCachePricing(ctx)
 	costTracker.StartAutoRefresh(ctx, 6*time.Hour)
 
+	semantic_cache := cache.New(store.Pool, 0.95)
+
 	g := &Gateway{
 		router:   gin.Default(),
 		provider: provider,
 		ctx:      ctx,
 		ct:       costTracker,
+		cache: semantic_cache,
 	}
 
 	authApiKeys := middleware.NewAuthMiddleware(strings.Split(config.C.VALID_API_KEYS, ","))
