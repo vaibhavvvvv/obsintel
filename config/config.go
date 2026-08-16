@@ -18,6 +18,7 @@ type Config struct {
     DBHost        string
     DBPort        string
     DBName        string
+	OLLAMA_URL 		string
 }
 
 var C Config
@@ -38,6 +39,7 @@ func Init(){
 		DBHost:       getEnv("DB_HOST", "localhost"),
 		DBPort:       getEnv("DB_PORT", "5432"),
 		DBName:       os.Getenv("DB_NAME"),
+		OLLAMA_URL: 		os.Getenv("OLLAMA_URL"),
 	}
 }
 

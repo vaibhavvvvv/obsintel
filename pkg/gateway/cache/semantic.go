@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/vaibhavvvvv/obsintel/config"
 )
 
 type SemanticCache struct {
@@ -45,9 +46,9 @@ func (sc *SemanticCache) Get(ctx context.Context, apiKey, query string) (string,
 
 	var cachedResponse string
 	var similarity float64
-	var rowId int64
+	var rowId string
 
-	err = sc.pool.QueryRow(ctx, `SELECT response_text, 1 - (query_embedding <=> $1::float4[]::vector) as similarity
+	err = sc.pool.QueryRow(ctx, `SELECT response_text, 1 - (query_embedding <=> $1::float4[]::vector) as similarity, id
 	FROM semantic_cache
 	WHERE api_key = $2
 	AND 1 - (query_embedding <=> $1::float4[]::vector) > $3
@@ -65,7 +66,7 @@ func (sc *SemanticCache) Get(ctx context.Context, apiKey, query string) (string,
 		logCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if _, err = sc.pool.Exec(logCtx,
-			"UPDATE semantic_cache SET hit_count = hitcount +1 where id=$1;",
+			"UPDATE semantic_cache SET hit_count = hit_count +1, last_accessed_at = NOW() where id=$1;",
 			rowId); err != nil {
 			log.Printf("Failed to log request: %v", err)
 		}
@@ -76,22 +77,19 @@ func (sc *SemanticCache) Get(ctx context.Context, apiKey, query string) (string,
 }
 
 func (sc *SemanticCache) Set(ctx context.Context, apiKey, query, response, model string) error {
-	hit_count := 0
 
 	query_embedding, err := sc.embed(ctx, query)
 	if err != nil {
 		return fmt.Errorf("failed to generate embedding for storage: %w", err)
 	}
 
-	// hit_count++
-
 	_, err = sc.pool.Exec(ctx,
 		"INSERT INTO semantic_cache (api_key, query_text, query_embedding, response_text, model, hit_count) VALUES($1,$2,$3::float4[]::vector,$4,$5,$6)",
-		apiKey, query, query_embedding, response, model, hit_count)
+		apiKey, query, query_embedding, response, model, 0)
 	if err != nil {
 		return fmt.Errorf("Failed to insert Cache Entry: %w", err)
 	}
-	return err
+	return nil
 }
 
 // embed calls Ollama API to generate embedding for text
@@ -105,7 +103,8 @@ func (sc *SemanticCache) embed(ctx context.Context, text string) ([]float32, err
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://localhost:11434/api/embeddings", bytes.NewBuffer(jsonBytes))
+	ollamaEmbeddingUrl := config.C.OLLAMA_URL + "/api/embeddings"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, ollamaEmbeddingUrl, bytes.NewBuffer(jsonBytes))
 	if err != nil {
 		return nil, err
 	}
