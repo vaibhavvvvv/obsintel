@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/vaibhavvvvv/obsintel/config"
+	"github.com/vaibhavvvvv/obsintel/pkg/gateway/metrics"
 	"github.com/vaibhavvvvv/obsintel/store/queries"
 )
 
@@ -32,6 +33,13 @@ func (g *Gateway) handleChat(c *gin.Context) {
 	if err != nil {
 		log.Printf("Cache lookup failed: %v", err)
 	}
+
+	if hit {
+		metrics.CacheHits.WithLabelValues("hit").Inc()
+	} else {
+		metrics.CacheHits.WithLabelValues("miss").Inc()
+	}
+
 	if hit {
 		c.JSON(200, gin.H{
 			"response":   cachedResponse,
@@ -79,6 +87,11 @@ func (g *Gateway) handleChat(c *gin.Context) {
 		}
 	}()
 
+	metrics.RequestTotal.WithLabelValues(config.C.AI_MODEL, fmt.Sprintf("%v", err == nil)).Inc()
+	metrics.RequestLatency.WithLabelValues(config.C.AI_MODEL).Observe(float64(latencyMs))
+	metrics.TokensUsed.WithLabelValues(config.C.AI_MODEL, "prompt").Add(float64(response.PromptTokens))
+	metrics.TokensUsed.WithLabelValues(config.C.AI_MODEL, "response").Add(float64(response.ResponseTokens))
+
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
@@ -114,6 +127,13 @@ func (g *Gateway) handleChatStream(c *gin.Context) {
 	if err != nil {
 		log.Printf("Cache lookup failed: %v", err)
 	}
+
+	if hit {
+		metrics.CacheHits.WithLabelValues("hit").Inc()
+	} else {
+		metrics.CacheHits.WithLabelValues("miss").Inc()
+	}
+
 	if hit {
 		// send it as a single SSE event
 		fmt.Fprintf(c.Writer, "data: %s\n\n", cachedResponse)
@@ -179,4 +199,16 @@ func (g *Gateway) handleChatStream(c *gin.Context) {
 		}
 	}()
 
+	metrics.RequestTotal.WithLabelValues(config.C.AI_MODEL, fmt.Sprintf("%v", err == nil)).Inc()
+	metrics.RequestLatency.WithLabelValues(config.C.AI_MODEL).Observe(float64(latencyMs))
+	metrics.TokensUsed.WithLabelValues(config.C.AI_MODEL, "prompt").Add(float64(response.PromptTokens))
+	metrics.TokensUsed.WithLabelValues(config.C.AI_MODEL, "response").Add(float64(response.ResponseTokens))
+
+}
+
+func (g *Gateway) handleHealth(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"status":  "ok",
+		"service": "obsintel-gateway",
+	})
 }

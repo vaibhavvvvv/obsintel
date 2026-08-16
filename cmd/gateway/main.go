@@ -8,6 +8,7 @@ import (
 
 	"github.com/vaibhavvvvv/obsintel/config"
 	"github.com/vaibhavvvvv/obsintel/pkg/gateway"
+	"github.com/vaibhavvvvv/obsintel/pkg/gateway/metrics"
 	"github.com/vaibhavvvvv/obsintel/store"
 )
 
@@ -21,6 +22,7 @@ func main() {
 	store.Init(ctx)
 	defer store.Close()
 
+	metrics.Init()
 	gateway.New(ctx).Run(config.C.Port)
 
 }
