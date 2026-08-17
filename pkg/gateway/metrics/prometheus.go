@@ -17,7 +17,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "obsintel_request_latency_ms",
 			Help:    "Request latency in milliseconds",
-			Buckets: []float64{100, 500, 1000, 2000, 5000, 10000},
+			Buckets: []float64{100, 500, 1000, 2000, 5000, 10000, 15000, 20000, 30000, 50000},
 		},
 		[]string{"model"},
 	)
