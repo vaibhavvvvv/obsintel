@@ -31,6 +31,33 @@ services:
     depends_on:
       - prometheus
 
+  redpanda:
+    image: redpandadata/redpanda:v23.3.11
+    command:
+      - redpanda
+      - start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      - --advertise-kafka-addr INTERNAL://redpanda:9092,EXTERNAL://localhost:29092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
+    ports:
+      - "29092:29092"
+      - "9644:9644"
+      - "8082:8082"
+
+  redpanda-console:
+    image: redpandadata/console:latest
+    ports:
+      - "8085:8080"
+    environment:
+      # Tell the console to use the internal Docker container address
+      KAFKA_BROKERS: redpanda:9092
+    depends_on:
+      - redpanda
+
 volumes:
   postgres_data:
   grafana_data:
