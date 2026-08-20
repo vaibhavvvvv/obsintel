@@ -4,17 +4,26 @@ package main
 import (
     "context"
     "encoding/json"
-    "fmt"
     "log"
+    "fmt"
 
     "github.com/twmb/franz-go/pkg/kgo"
+    "github.com/vaibhavvvvv/obsintel/config"
     "github.com/vaibhavvvvv/obsintel/internal/intelligence"
+    "github.com/vaibhavvvvv/obsintel/store"
+    "github.com/vaibhavvvvv/obsintel/store/queries"
 )
 
 func main() {
+    config.Init()
+    
+    ctx := context.Background()
+    store.Init(ctx)
+    defer store.Close()
+
     client, err := kgo.NewClient(
         kgo.SeedBrokers("localhost:29092"), //tells the client where Redpanda is as in a cluster there are multiple brokers
-        kgo.ConsumerGroup("obsintel-processor"), 
+        kgo.ConsumerGroup("obsintel-processor"),
         kgo.ConsumeTopics("telemetry.events"),
     )
     if err != nil {
@@ -22,8 +31,7 @@ func main() {
     }
     defer client.Close()
 
-    ctx := context.Background()
-    fmt.Println("Consumer started, waiting for events...")
+    fmt.Println("Processor started, waiting for events...")
 
     for {
         fetches := client.PollFetches(ctx)
@@ -38,8 +46,14 @@ func main() {
                 log.Printf("Failed to unmarshal event: %v", err)
                 return
             }
-            fmt.Printf("Received event: service=%s type=%s severity=%s message=%s\n",
-                event.Service, event.EventType, event.Severity, event.Message)
+
+            if err := queries.InsertTelemetryEvent(ctx, event); err != nil {
+                log.Printf("Failed to insert event %s: %v", event.ID, err)
+                return
+            }
+
+            fmt.Printf("Stored event: service=%s type=%s severity=%s\n",
+                event.Service, event.EventType, event.Severity)
         })
     }
 }
